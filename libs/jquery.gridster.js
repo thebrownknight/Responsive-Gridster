@@ -2965,6 +2965,7 @@
 
     fn.can_go_up = function($el) {
         var el_grid_data = $el.coords().grid;
+        // console.log(el_grid_data);
         var initial_row = el_grid_data.row;
         var prev_row = initial_row - 1;
         var ga = this.gridmap;
@@ -3578,6 +3579,7 @@
 
         var cols = Math.floor(aw / this.min_widget_width) +
                    this.options.extra_cols;
+        console.log(aw + " - " + this.min_widget_width + " - " + this.options.extra_cols);
 
         var actual_cols = this.$widgets.map(function() {
             return $(this).attr('data-col');
@@ -3595,9 +3597,11 @@
         });
 
         this.cols = Math.max(min_cols, cols, this.options.min_cols);
+        console.log(min_cols + ", " + cols + ", " + this.options.min_cols);
 
         if (max_cols && max_cols >= min_cols && max_cols < this.cols) {
             this.cols = max_cols;
+            console.log("HERE: " + max_cols);
         }
 
         this.rows = Math.max(max_rows, this.options.min_rows);

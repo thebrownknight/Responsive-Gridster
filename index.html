@@ -8,29 +8,27 @@
 	<meta name="description" content="Responsive grid using gridster.js">
 
 	<!-- Stylesheets -->
-	<link rel="stylesheet" href="css/bootstrap.min.css" />
 	<link rel="stylesheet" href="css/jquery.gridster.min.css" />
+	<link id="bootstrapcss" rel="stylesheet" href="css/bootstrap.min.css" />
 	<link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-	<section class="grid_test">
-		<div class="gridster">
-			<ul>
-				<li data-row="1" data-col="1" data-sizex="1" data-sizey="1"><h1>Test Content 1</h1></li>
-				<li data-row="2" data-col="1" data-sizex="1" data-sizey="1"><h1>Test Content 2</h1></li>
-				<li data-row="3" data-col="1" data-sizex="1" data-sizey="1"><h1>Test Content 3<h1></li>
-				<li data-row="1" data-col="2" data-sizex="2" data-sizey="1"></li>
-				<li data-row="2" data-col="2" data-sizex="2" data-sizey="2"></li>
-				<li data-row="1" data-col="4" data-sizex="1" data-sizey="1"></li>
-				<li data-row="2" data-col="4" data-sizex="2" data-sizey="1"></li>
-				<li data-row="3" data-col="4" data-sizex="1" data-sizey="1"></li>           
-				<li data-row="1" data-col="5" data-sizex="1" data-sizey="1"></li>
-				<li data-row="3" data-col="5" data-sizex="1" data-sizey="1"></li>
-				<li data-row="1" data-col="6" data-sizex="1" data-sizey="1"></li>
-				<li data-row="2" data-col="6" data-sizex="1" data-sizey="2"></li>               
-             </ul>
-		</div>
-	</section>
+	<div id="grid_container">
+	    <div class="gridster">
+	        <ul>
+	     
+	            <li data-row="1" data-col="1" data-sizex="2" data-sizey="1"><h1>Test 1</h1></li>
+	            <li data-row="1" data-col="3" data-sizex="2" data-sizey="1"><h1>Test 2</h1></li>
+	            <li data-row="1" data-col="6" data-sizex="1" data-sizey="1"><h1>Test 3</h1></li>
+	            
+	            
+	            <li data-row="2" data-col="1" data-sizex="2" data-sizey="1"><h1>Test 4</h1></li>
+	            <li data-row="2" data-col="3" data-sizex="2" data-sizey="1"><h1>Test 5</h1></li>
+	            <li data-row="2" data-col="5" data-sizex="2" data-sizey="1"><h1>Test 6</h1></li>
+	            
+	          </ul>
+	    </div>
+	</div>
 	<!-- Javascript -->
 	<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
 	<script src="libs/bootstrap.min.js"></script>
