@@ -1,28 +1,22 @@
 (function($) {
   var extensions = {
-    resize_widget_dimensions: function(options) {
-      if (options.widget_margins) {
-        this.options.widget_margins = options.widget_margins;
-      }
+    resize_widget_dimensions: function(widget, options) {
+		var wid_margins, wid_base_dimensions, min_wid_height, min_wid_width;
+		var $cur_widget = $(widget);
 
-      if (options.widget_base_dimensions) {
-        this.options.widget_base_dimensions = options.widget_base_dimensions;
-      }
+		if (options.widget_margins)
+			wid_margins = options.widget_margins;
 
-      this.min_widget_width = (this.options.widget_margins[0] * 2) + this.options.widget_base_dimensions[0];
-      this.min_widget_height = (this.options.widget_margins[1] * 2) + this.options.widget_base_dimensions[1];
+		if (options.widget_base_dimensions)
+			wid_base_dimensions = options.widget_base_dimensions;
 
-      var serializedGrid = this.serialize();
-      this.$widgets.each($.proxy(function(i, widget) {
-        var $widget = $(widget);
-        var data = serializedGrid[i];
-        this.resize_widget($widget, data.sizex, data.sizey);
-      }, this));
+		min_wid_width = (wid_margins[0] * 2) + wid_base_dimensions[0];
+		min_wid_height = (wid_margins[1] * 2) + wid_base_dimensions[1];
 
-      this.generate_grid_and_stylesheet();
-      this.get_widgets_from_DOM();
-      this.set_dom_grid_height();
-      return false;
+
+		$cur_widget.css('width', wid_base_dimensions[0]);
+
+		return false;
     },
     /**
 	* Move the specified widget to a specific location on the grid.
@@ -40,7 +34,7 @@
 			xdiff = col - widget_grid_data.col - widget_grid_data.size_x,
 			ydiff = row - widget_grid_data.row,
 			$next_widgets = this.widgets_below($widget);
-		//console.log(widget_grid_data);
+		
 		var can_move_to_new_cell = this.can_move_to(
 			widget_grid_data, col, row);
 		console.log(can_move_to_new_cell);
@@ -87,21 +81,25 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
   
   var container, resizeTimer;
   
-  function calculateNewDimensions() {
-    var containerWidth = container.innerWidth(),
-		containerHeight = ($(window).height() < container.height())
-							? $(window).height()
-							: container.height();
-	console.log("Window height: " + $(window).height());
-	console.log("Container height: " + container.height());
-    console.log([containerWidth, containerHeight]);
-    var newMarginX      = containerWidth*MARGINS_RATIO / (COLS*2),
-        newMarginY      = containerHeight * MARGINS_RATIO / (ROWS * 2),
-		newSizeX		= containerWidth*(1 - MARGINS_RATIO) / COLS,
-		newSizeY        = containerHeight*(1-MARGINS_RATIO) / ROWS;
+  function calculateNewDimensions(widget, orig_sizex, orig_sizey) {
+	var $cur_widget = $(widget);
+    var containerWidth = gridster.$wrapper.width(),
+		containerHeight = ($(window).height() < container.height()) ?
+							$(window).height() :
+							container.height(),
+		gridster_marginX = gridster.options.widget_margins[0],
+		gridster_marginY = gridster.options.widget_margins[1];
 
-	console.log([newSizeX, newSizeY]);
-    return [[newSizeX, newSizeY], [newMarginX, newMarginY]];
+	// console.log("Window height: " + $(window).height());
+	// console.log("Container width: " + containerWidth);
+	// console.log([containerWidth, containerHeight]);
+
+    var newSizeX = containerWidth - (gridster_marginX * 2);
+
+	// console.log("Printing new dimensions:");
+	// console.log([newSizeX, orig_sizey]);
+
+    return [[newSizeX, orig_sizey], [gridster_marginX, gridster_marginY]];
   }
 
   function performShift(widget, direction) {
@@ -111,30 +109,41 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
 		orig_row = 0,
 		orig_col = 0,
 		next_position = {};
-	
+
 	// For resizing the browser inward
-	// Check to see if the column of the widget intersects with
-	// the calculated number of columns.
 	if (direction && direction === "inward") {
-		// Get the data-sizex and data-sizey attributes
+
+		// Retrieve the attributes of the current widget.
 		size_x = parseInt($cur_widget.attr('data-sizex'), 10);
 		size_y = parseInt($cur_widget.attr('data-sizey'), 10);
 		orig_col = parseInt($cur_widget.attr('data-col'), 10);
 		next_position = gridster.next_position(size_x, size_y);
-		console.log(next_position);
+		
+		// console.log(next_position);
+
 		if (next_position && next_position.col !== orig_col)
 			gridster.move_widget_sl($cur_widget, next_position.row, next_position.col);
+		else if (!next_position)
+			resizeWidgetDimensions(widget, size_x, size_y);
+
 	} else if (direction && direction === "outward") {
-		console.log("Moving outwards.");
+
+		// console.log("Moving outwards.");
+		
 		size_x = parseInt($cur_widget.attr('data-sizex'), 10);
 		size_y = parseInt($cur_widget.attr('data-sizey'), 10);
 		orig_row = parseInt($cur_widget.attr('data-row'), 10);
 		orig_col = parseInt($cur_widget.attr('data-col'), 10);
+
+		// console.log("WIDGET STATS: " + size_x + ", " + size_y + ", " + orig_row + ", " + orig_col);
 		
 		next_position = gridster.next_position(size_x, size_y);
-		console.log(next_position);
-		if (next_position && next_position.row < orig_row
-			&& next_position.col !== orig_col)
+		
+		// console.log(next_position);
+
+		if (next_position &&
+			next_position.row < orig_row &&
+			next_position.col !== orig_col)
 			gridster.move_widget_sl($cur_widget, next_position.row, next_position.col);
 	}
   }
@@ -146,36 +155,44 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
 						gridster.options.extra_cols,
 		grid_width = gridster.cols * gridster.min_widget_width;
 
-	console.log("WRAPPER WIDTH: " + wrapper_width + ", MIN WIDGET WIDTH: " + gridster.min_widget_width);
+	// console.log("WRAPPER WIDTH: " + wrapper_width + ", MIN WIDGET WIDTH: " + gridster.min_widget_width);
+	
 	var bottom_row = -1, $bottom_widgets;
 	
 	gridster.cols = calc_num_cols;
-	console.log("NUM COLS: " + calc_num_cols);
+	
+	// console.log("NUM COLS: " + calc_num_cols);
+	
 	// Loop through all the widgets
 	gridster.$widgets.each(function(index, widget){
 		var $cur_widget = $(widget),
-			cur_widget_col = parseInt($cur_widget.attr('data-col')),
-			cur_widget_row = parseInt($cur_widget.attr('data-row')),
-			cur_widget_sizex = parseInt($cur_widget.attr('data-sizex')),
-			cur_widget_sizey = parseInt($cur_widget.attr('data-sizey'));
-		console.log("COLS IN WIDGET " + index + ": " + cur_widget_col);
-		if (cur_widget_col >= calc_num_cols
-			|| (cur_widget_col + cur_widget_sizex - 1) === calc_num_cols) {
+			cur_widget_col = parseInt($cur_widget.attr('data-col'), 10),
+			cur_widget_row = parseInt($cur_widget.attr('data-row'), 10),
+			cur_widget_sizex = parseInt($cur_widget.attr('data-sizex'), 10),
+			cur_widget_sizey = parseInt($cur_widget.attr('data-sizey'), 10);
+		
+		//console.log("COLS IN WIDGET " + index + ": " + cur_widget_col);
+		
+		// Check to see if any part of the widget intersects with the calculated columns.
+		if (cur_widget_col >= calc_num_cols ||
+			(cur_widget_col + cur_widget_sizex - 2) >= calc_num_cols) {
 			performShift(widget, "inward");
 		}
 
 		// Get the bottom most row.
-		bottom_row = (cur_widget_row > bottom_row)
-						? cur_widget_row
-						: bottom_row;
-		console.log("BOTTOM ROW: " + bottom_row);
+		bottom_row = (cur_widget_row > bottom_row) ? cur_widget_row : bottom_row;
 	});
 
 	$bottom_widgets = gridster.$widgets.filter(function(){
-		return parseInt($(this).attr('data-row')) === bottom_row;
+		return parseInt($(this).attr('data-row'), 10) === bottom_row;
 	});
-	console.log("LENGTH.... " + $bottom_widgets.length);
-	$bottom_widgets.each(function(index, widget){
+
+	/* 
+		For performance reasons, instead of trying to find open spots
+		for all of the widgets, we could just shift only the bottom row 
+		when an open spot appears after resizing the browser window outwards.
+	*/
+	gridster.$widgets.each(function(index, widget){
 		performShift(widget, "outward");
 	});
 
@@ -184,12 +201,12 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
 	gridster.set_dom_grid_height();
   }
   
-  function resizeWidgetDimensions() {
+  function resizeWidgetDimensions(widget, orig_sizex, orig_sizey) {
     // Calculate widget dimension proportional to parent dimension.
-    var newDimensions = calculateNewDimensions();
+    var newDimensions = calculateNewDimensions(widget, orig_sizex, orig_sizey);
   
     // Set new "fluid" widget dimensions
-    gridster.resize_widget_dimensions({
+    gridster.resize_widget_dimensions(widget, {
       widget_base_dimensions: newDimensions[0],
       widget_margins: newDimensions[1]
     });
@@ -206,13 +223,14 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
   }
   
   public.init = function(elem) {
-    container = elem;
+	container = elem;
     // Initialize gridster and get API reference.
       gridster  = $(SELECTOR, elem).gridster({
 		widget_base_dimensions: [140, 140],
 		widget_margins: [10, 10]
       }).data('gridster');
 
+	// Call the window resize hook to bind the resize event handler.
     hookWidgetResizer();
   };
 
