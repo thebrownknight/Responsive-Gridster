@@ -110,36 +110,26 @@ ResponsiveGrid.MainController = (function($, window, document, undefined) {
 		orig_col = 0,
 		next_position = {};
 
+	// Retrieve the attributes of the current widget.
+	size_x = parseInt($cur_widget.attr('data-sizex'), 10);
+	size_y = parseInt($cur_widget.attr('data-sizey'), 10);
+	orig_row = parseInt($cur_widget.attr('data-row'), 10);
+	orig_col = parseInt($cur_widget.attr('data-col'), 10);
+
+	// Retrieve the next position the widget can move to.
+	next_position = gridster.next_position(size_x, size_y);
+
 	// For resizing the browser inward
 	if (direction && direction === "inward") {
-
-		// Retrieve the attributes of the current widget.
-		size_x = parseInt($cur_widget.attr('data-sizex'), 10);
-		size_y = parseInt($cur_widget.attr('data-sizey'), 10);
-		orig_col = parseInt($cur_widget.attr('data-col'), 10);
-		next_position = gridster.next_position(size_x, size_y);
-		
-		// console.log(next_position);
 
 		if (next_position && next_position.col !== orig_col)
 			gridster.move_widget_sl($cur_widget, next_position.row, next_position.col);
 		else if (!next_position)
 			resizeWidgetDimensions(widget, size_x, size_y);
 
-	} else if (direction && direction === "outward") {
-
-		// console.log("Moving outwards.");
-		
-		size_x = parseInt($cur_widget.attr('data-sizex'), 10);
-		size_y = parseInt($cur_widget.attr('data-sizey'), 10);
-		orig_row = parseInt($cur_widget.attr('data-row'), 10);
-		orig_col = parseInt($cur_widget.attr('data-col'), 10);
-
-		// console.log("WIDGET STATS: " + size_x + ", " + size_y + ", " + orig_row + ", " + orig_col);
-		
-		next_position = gridster.next_position(size_x, size_y);
-		
-		// console.log(next_position);
+	}
+	// For resizing the browser outward
+	else if (direction && direction === "outward") {
 
 		if (next_position &&
 			next_position.row < orig_row &&
